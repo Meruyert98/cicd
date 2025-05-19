@@ -1,26 +1,30 @@
 #!/bin/bash
 
-set -e  # Exit script on error
+set -e  # Exit on any error
 
-# Variables passed from inputs
+# Variables passed as arguments
 CONTAINER_NAME="$1"
 URL="$2"
 
-echo "Starting Docker container for performance testing..."
+echo "Starting Docker container: $CONTAINER_NAME"
 docker run -d --name "$CONTAINER_NAME" -p 8080:8080 flask-app:"${GITHUB_SHA}"
 
-echo "Running JMeter tests..."
-# Ensure JMeter binary directory exists
-if [ ! -d "/opt/apache-jmeter-5.5" ]; then
-  echo "Error: JMeter is not installed in the container. Exiting!"
-  exit 1
-fi
+echo "Waiting for application to be available at $URL..."
+# Wait until the app responds (up to 30 seconds)
+for i in {1..30}; do
+    if curl -s --head --fail "$URL" > /dev/null; then
+        echo "Application is up!"
+        break
+    fi
+    echo "Waiting... ($i)"
+    sleep 1
+done
 
-# Run JMeter performance tests
-/opt/apache-jmeter-5.5/bin/jmeter -n -t /opt/test-plan.jmx -l results.jtl -JURL="$URL"
+echo "Running JMeter performance tests..."
+/opt/apache-jmeter-5.6.3/bin/jmeter -n -t /opt/test-plan.jmx -l /opt/results.jtl -JURL="$URL"
 
-echo "Stopping and cleaning up Docker container..."
+echo "Performance test completed. Stopping container..."
 docker stop "$CONTAINER_NAME"
 docker rm "$CONTAINER_NAME"
 
-echo "Performance test completed successfully."
+echo "Done."
