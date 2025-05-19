@@ -1,0 +1,6 @@
+name: 'Performance Test'
+description: 'Run performance test using JMeter inside Docker container'
+
+runs:
+  using: 'docker'
+  image: 'Dockerfile'
