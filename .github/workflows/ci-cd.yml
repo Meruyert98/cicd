@@ -38,7 +38,7 @@ jobs:
 
       # Vulnerability scan with Trivy
       - name: Scan image for vulnerabilities
-        uses: aquasecurity/trivy-action@v0.11.0
+        uses: aquasecurity/trivy-action@master
         with:
           image-ref: ${{ env.DOCKER_HUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
 
