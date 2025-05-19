@@ -6,6 +6,8 @@ set -e  # Exit on any error
 CONTAINER_NAME="$1"
 URL="$2"
 
+RUN apt-get update && apt-get install -y docker.io
+
 echo "Starting Docker container: $CONTAINER_NAME"
 docker run -d --name "$CONTAINER_NAME" -p 8080:8080 flask-app:"${GITHUB_SHA}"
 
