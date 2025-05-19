@@ -36,11 +36,11 @@ jobs:
         run: |
           docker push ${{ env.DOCKER_HUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
 
-      # # Vulnerability scan with Trivy
-      # - name: Scan image for vulnerabilities
-      #   uses: aquasecurity/trivy-action@v0.9.3
-      #   with:
-      #     image-ref: ${{ env.DOCKER_HUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+      # Vulnerability scan with Trivy
+      - name: Scan image for vulnerabilities
+        uses: aquasecurity/trivy-action@v0.11.0
+        with:
+          image-ref: ${{ env.DOCKER_HUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
 
       # Run performance tests using the custom action
       - name: Run performance tests
