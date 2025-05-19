@@ -4,49 +4,46 @@ on:
   push:
     branches:
       - main
-      - '**'
+  pull_request:
+
+env:
+  IMAGE_NAME: flask-app
+  DOCKER_HUB_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+  DOCKER_HUB_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
 
 jobs:
-  build_and_scan:
+  build:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout repository
+      - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
-
-      - name: Log in to DockerHub
+      # Log in to Docker Hub
+      - name: Log in to Docker Hub
         uses: docker/login-action@v2
         with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
+          username: ${{ env.DOCKER_HUB_USERNAME }}
+          password: ${{ env.DOCKER_HUB_PASSWORD }}
 
-      - name: Extract version info
-        id: vars
-        run: echo "IMAGE_TAG=app:${{ github.sha }}" >> $GITHUB_ENV
-
+      # Build Docker image
       - name: Build Docker image
         run: |
-          docker build -t $IMAGE_TAG -f app.dockerfile .
+          docker build -t ${{ env.DOCKER_HUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ github.sha }} -f app.dockerfile .
 
-      - name: Push Docker image
+      # Push Docker image
+      - name: Push Docker image to Docker Hub
         run: |
-          docker push $IMAGE_TAG
+          docker push ${{ env.DOCKER_HUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
 
-      - name: Run Trivy vulnerability scan
-        uses: aquasecurity/trivy-action@master
+      # Vulnerability scan with Trivy
+      - name: Scan image for vulnerabilities
+        uses: aquasecurity/trivy-action@v0.9.3
         with:
-          image-ref: $IMAGE_TAG
+          image-ref: ${{ env.DOCKER_HUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
 
-  performance_test:
-    needs: build_and_scan
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-
+      # Run performance tests using the custom action
       - name: Run performance tests
         uses: ./.github/actions/performance-test
         with:
-          image-tag: ${{ env.IMAGE_TAG }}
+          jmeter_test_file: '.github/actions/performance-test/test-plan.jmx'

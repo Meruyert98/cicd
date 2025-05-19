@@ -1,9 +1,12 @@
 name: 'Performance Test'
-description: 'Run performance tests using JMeter'
+description: 'Run performance tests with JMeter inside Docker'
 inputs:
-  image-tag:
-    description: 'Docker image tag to test'
+  jmeter_test_file:
+    description: 'Path to the JMeter test file'
     required: true
+    default: 'test-plan.jmx'
 runs:
   using: 'docker'
   image: 'Dockerfile'
+  args:
+    - ${{ inputs.jmeter_test_file }}
