@@ -21,7 +21,7 @@ inputs:
 
 runs:
   using: "docker"  # Use Docker for execution
-  image: "Dockerfile"  # Specify that the Dockerfile in this directory should be built
+  image: "./app.dockerfile"  # Specify that the Dockerfile in this directory should be built
   args:  # Pass inputs as arguments to the ENTRYPOINT script
     - ${{ inputs.container_name }}
     - ${{ inputs.url }}
