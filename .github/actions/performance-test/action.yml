@@ -10,11 +10,18 @@ inputs:
     description: URL of the application
     required: true
 
+# runs:
+#   using: "composite"
+#   steps:
+#     # Use the custom entrypoint script
+#     - name: Run Performance Test
+#       shell: bash
+#       run: |
+#         ./entrypoint.sh "${{ inputs.container_name }}" "${{ inputs.url }}"
+
 runs:
-  using: "composite"
-  steps:
-    # Use the custom entrypoint script
-    - name: Run Performance Test
-      shell: bash
-      run: |
-        ./entrypoint.sh "${{ inputs.container_name }}" "${{ inputs.url }}"
+  using: "docker"  # Use Docker for execution
+  image: "Dockerfile"  # Specify that the Dockerfile in this directory should be built
+  args:  # Pass inputs as arguments to the ENTRYPOINT script
+    - ${{ inputs.container_name }}
+    - ${{ inputs.url }}
