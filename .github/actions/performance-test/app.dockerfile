@@ -1,29 +1,16 @@
-# Stage 1: Downloader stage
-FROM openjdk:11-slim AS downloader
+FROM openjdk:11-jre-slim
 
-WORKDIR /tmp
+# Install dependencies
+RUN apt-get update && apt-get install -y \
+    curl \
+    tar \
+    && rm -rf /var/lib/apt/lists/*
 
-ENV JMETER_VERSION=5.6.3
-ENV JMETER_ARCHIVE=apache-jmeter-${JMETER_VERSION}.zip
+# Install JMeter
+RUN curl -L https://downloads.apache.org//jmeter/binaries/apache-jmeter-5.5.tgz | tar xz -C /opt
 
-RUN apt-get update && \
-    apt-get install -y wget unzip && \
-    wget https://dlcdn.apache.org//jmeter/binaries/${JMETER_ARCHIVE} && \
-    unzip ${JMETER_ARCHIVE} && \
-    rm ${JMETER_ARCHIVE}
-
-# Stage 2: Runtime stage
-FROM openjdk:11-slim
-
-WORKDIR /jmeter
-
-COPY --from=downloader /tmp/apache-jmeter-5.6.3 /jmeter/apache-jmeter-5.6.3
-
+# Copy entrypoint script
 COPY entrypoint.sh /entrypoint.sh
-COPY test-plan.jmx /test-plan.jmx
-
 RUN chmod +x /entrypoint.sh
 
-ENV JMETER_HOME=/jmeter/apache-jmeter-5.6.3
-
-ENTRYPOINT ["/entrypoint.sh"]
+ENTRYPOINT [ "/entrypoint.sh" ]

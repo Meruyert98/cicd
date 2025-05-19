@@ -2,39 +2,42 @@ name: CI/CD Pipeline
 
 on:
   push:
-    branches: [ main ]
+    branches:
+      - main
 
 jobs:
-  build-test-deploy:
+  build:
     runs-on: ubuntu-latest
 
     steps:
+      # Checkout source code
       - name: Checkout Code
         uses: actions/checkout@v3
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+      # Build Docker Image
+      - name: Build Docker Image
+        run: |
+          docker build -t my-python-app:${{ github.sha }} -f app.dockerfile .
 
-      - name: Login to DockerHub
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
+      # Push Docker Image to DockerHub
+      - name: Push Docker Image
+        env:
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+        run: |
+          echo "${DOCKER_PASSWORD}" | docker login -u "${DOCKER_USERNAME}" --password-stdin
+          docker tag my-python-app:${{ github.sha }} myrepo/my-python-app:${{ github.sha }}
+          docker push myrepo/my-python-app:${{ github.sha }}
 
-      - name: Build and Push Docker Image
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: app.dockerfile
-          push: true
-          tags: ${{ secrets.DOCKER_USERNAME }}/flask-app:latest
-
-      - name: Run Trivy Scan
+      # Perform Vulnerability Scanning with Trivy
+      - name: Vulnerability Scan
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: '${{ secrets.DOCKER_USERNAME }}/flask-app:latest'
+          image-ref: my-python-app:${{ github.sha }}
 
-      - name: Run Performance Test
-        uses: ./.github/actions/performance-test
-        # with:
-        #   image: ${{ secrets.DOCKER_USERNAME }}/flask-app:latest
+      # Run Performance Test
+      - name: Run Performance Tests
+        uses: ./.github/actions/performance-test/
+        with:
+          container_name: my-python-app-container
+          url: http://localhost:8080

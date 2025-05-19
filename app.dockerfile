@@ -1,22 +1,16 @@
-# Stage 1: Build stage
-FROM python:3.9-slim AS builder
-
-WORKDIR /app
-
-COPY requirements.txt .
-RUN pip install --user --no-cache-dir -r requirements.txt
-
-COPY app.py .
-
-# Stage 2: Final image
 FROM python:3.9-slim
 
 WORKDIR /app
 
-COPY --from=builder /root/.local /root/.local
-COPY --from=builder /app /app
+# Install dependencies
+COPY requirements.txt .
+RUN pip install -r requirements.txt
 
-ENV PATH=/root/.local/bin:$PATH
+# Copy application code
+COPY . .
 
+# Expose the application port
 EXPOSE 8080
+
+# Run the application
 CMD ["python", "app.py"]
