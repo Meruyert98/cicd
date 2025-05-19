@@ -1,13 +1,9 @@
-# .github/actions/performance-test/action.yml
 name: 'Performance Test'
-description: 'Run performance tests with JMeter inside Docker'
+description: 'Run performance tests using JMeter'
 inputs:
-  jmeter_test_file:
-    description: 'Path to the JMeter test file'
+  image-tag:
+    description: 'Docker image tag to test'
     required: true
-    default: 'test-plan.jmx'
 runs:
   using: 'docker'
   image: 'Dockerfile'
-  args:
-    - ${{ inputs.jmeter_test_file }}

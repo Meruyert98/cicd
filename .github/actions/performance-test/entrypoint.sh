@@ -1,20 +1,19 @@
-#!/bin/sh
-# .github/actions/performance-test/entrypoint.sh
-
+#!/bin/bash
 set -e
 
-TEST_PLAN=${1:-test-plan.jmx}
+# Pull the Docker image
+docker pull $1
 
-echo "Running JMeter performance test with plan: $TEST_PLAN"
+# Run the Docker container
+docker run -d --name app_container $1
 
-if [ ! -f "$TEST_PLAN" ]; then
-  echo "ERROR: Test plan file $TEST_PLAN does not exist."
-  exit 1
-fi
+# Run JMeter tests
+# Assuming you have a JMeter test plan named 'performance-test.jmx' in the repository
+jmeter -n -t /path/to/performance-test.jmx -l results.jtl
 
-jmeter -n -t "$TEST_PLAN" -l results.jtl
+# Stop and remove the container
+docker stop app_container
+docker rm app_container
 
-# You could add more steps here, like uploading results as artifacts
-echo "Performance test completed."
-
-exit 0
+# Output results
+cat results.jtl

@@ -1,44 +1,52 @@
-# .github/workflows/ci-cd.yml
 name: CI/CD Pipeline
 
 on:
   push:
     branches:
       - main
-      - master
-  pull_request:
+      - '**'
 
 jobs:
-  build:
+  build_and_scan:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout source code
+      - name: Checkout repository
         uses: actions/checkout@v3
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
 
-      - name: Log in to Docker Hub
+      - name: Log in to DockerHub
         uses: docker/login-action@v2
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Build and push Docker image to Docker Hub
-        uses: docker/build-push-action@v4
-        with:
-          context: .
-          file: ./app.dockerfile
-          push: true
-          tags: ${{ secrets.DOCKER_USERNAME }}/flask-app:${{ github.sha }}
+      - name: Extract version info
+        id: vars
+        run: echo "IMAGE_TAG=app:${{ github.sha }}" >> $GITHUB_ENV
 
-      - name: Run vulnerability scan with Trivy
+      - name: Build Docker image
+        run: |
+          docker build -t $IMAGE_TAG -f app.dockerfile .
+
+      - name: Push Docker image
+        run: |
+          docker push $IMAGE_TAG
+
+      - name: Run Trivy vulnerability scan
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: ${{ secrets.DOCKER_USERNAME }}/flask-app:${{ github.sha }}
+          image-ref: $IMAGE_TAG
+
+  performance_test:
+    needs: build_and_scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
       - name: Run performance tests
         uses: ./.github/actions/performance-test
         with:
-          jmeter_test_file: 'test-plan.jmx'
+          image-tag: ${{ env.IMAGE_TAG }}
