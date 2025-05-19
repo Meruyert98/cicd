@@ -36,5 +36,5 @@ jobs:
 
       - name: Run Performance Test
         uses: ./.github/actions/performance-test
-        with:
-          image: ${{ secrets.DOCKER_USERNAME }}/flask-app:latest
+        # with:
+        #   image: ${{ secrets.DOCKER_USERNAME }}/flask-app:latest

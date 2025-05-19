@@ -1,6 +1,11 @@
 name: 'Performance Test'
-description: 'Run performance test using JMeter inside Docker container'
+description: 'Run performance test with custom Dockerfile'
 
 runs:
-  using: 'docker'
-  image: 'Dockerfile'
+  using: 'composite'
+  steps:
+    - name: Build container from custom Dockerfile
+      shell: bash
+      run: |
+        docker build -f .github/actions/performance-test/app.dockerfile -t perf-test .
+        docker run -d -p 8080:8080 --name perf-container perf-test
