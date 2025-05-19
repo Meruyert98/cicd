@@ -1,32 +1,20 @@
-#!/bin/bash
+#!/bin/sh
+# .github/actions/performance-test/entrypoint.sh
 
-set -e  # Exit on any error
+set -e
 
-# Variables passed as arguments
-CONTAINER_NAME="$1"
-URL="$2"
+TEST_PLAN=${1:-test-plan.jmx}
 
-RUN apt-get update && apt-get install -y docker.io
+echo "Running JMeter performance test with plan: $TEST_PLAN"
 
-echo "Starting Docker container: $CONTAINER_NAME"
-docker run -d --name "$CONTAINER_NAME" -p 8080:8080 flask-app:"${GITHUB_SHA}"
+if [ ! -f "$TEST_PLAN" ]; then
+  echo "ERROR: Test plan file $TEST_PLAN does not exist."
+  exit 1
+fi
 
-echo "Waiting for application to be available at $URL..."
-# Wait until the app responds (up to 30 seconds)
-for i in {1..30}; do
-    if curl -s --head --fail "$URL" > /dev/null; then
-        echo "Application is up!"
-        break
-    fi
-    echo "Waiting... ($i)"
-    sleep 1
-done
+jmeter -n -t "$TEST_PLAN" -l results.jtl
 
-echo "Running JMeter performance tests..."
-/opt/apache-jmeter-5.6.3/bin/jmeter -n -t /opt/test-plan.jmx -l /opt/results.jtl -JURL="$URL"
+# You could add more steps here, like uploading results as artifacts
+echo "Performance test completed."
 
-echo "Performance test completed. Stopping container..."
-docker stop "$CONTAINER_NAME"
-docker rm "$CONTAINER_NAME"
-
-echo "Done."
+exit 0

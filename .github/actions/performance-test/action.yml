@@ -1,18 +1,13 @@
-name: Performance Test
-description: Run performance tests using a custom script and Dockerized environment
-author: Your Name
-
+# .github/actions/performance-test/action.yml
+name: 'Performance Test'
+description: 'Run performance tests with JMeter inside Docker'
 inputs:
-  container_name:
-    description: Name of the Docker container
+  jmeter_test_file:
+    description: 'Path to the JMeter test file'
     required: true
-  url:
-    description: URL of the application
-    required: true
-
+    default: 'test-plan.jmx'
 runs:
-  using: "docker"  # Use Docker for execution
-  image: "./app.dockerfile"  # Specify that the Dockerfile in this directory should be built
-  args:  # Pass inputs as arguments to the ENTRYPOINT script
-    - ${{ inputs.container_name }}
-    - ${{ inputs.url }}
+  using: 'docker'
+  image: 'Dockerfile'
+  args:
+    - ${{ inputs.jmeter_test_file }}
