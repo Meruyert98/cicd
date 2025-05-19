@@ -49,7 +49,7 @@ jobs:
           jmeter_test_file: '.github/actions/performance-test/test-plan.jmx'
 
   deploy:
-    needs: performance-test
+    needs: build
     runs-on: ubuntu-latest
 
     steps:
@@ -66,3 +66,10 @@ jobs:
       - name: Run Docker container
         run: |
           docker run -d -p 8080:8080 --name flask_container ${{ env.DOCKER_HUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+
+      - name: Wait for app to start
+        run: sleep 10
+
+      - name: Test application is running
+        run: |
+          curl -f http://localhost:8080 || (echo "App did not start" && exit 1)
