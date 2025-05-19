@@ -8,6 +8,6 @@ inputs:
     default: 'test-plan.jmx'
 runs:
   using: 'docker'
-  image: 'Dockerfile'
+  image: "./app.dockerfile"
   args:
     - ${{ inputs.jmeter_test_file }}
